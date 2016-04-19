@@ -1,4 +1,5 @@
 from keras.models import Sequential
+from keras.models import model_from_json
 
 from keras.layers.core import Dense, Activation, Flatten
 from keras.layers.convolutional import Convolution2D, MaxPooling2D
@@ -89,9 +90,6 @@ model.add(Dense(512))
 model.add(Dense(output_dim=num_classes))
 model.add(Activation("softmax"))
 
-#define optimizer with learning rate, momentum etc.
-sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-model.compile(loss='categorical_crossentropy', optimizer=sgd)
 
 #normalize image data to be between 0 and 1
 X_train = X_train.astype('float32')
@@ -99,26 +97,45 @@ X_test = X_test.astype('float32')
 X_train /= 255
 X_test /= 255
 
-#train model
-model.fit(X_train, Y_train,
-              batch_size=100,
-              nb_epoch=100,
-              validation_data=(X_test, Y_test),
-              shuffle=True)
+def train_model(model):
+  #define optimizer with learning rate, momentum etc.
+  sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+  #model.compile(loss='categorical_crossentropy', optimizer=sgd)
+  model.compile(loss='mean_squared_error', optimizer='rmsprop')
+  #train model
+  model.fit(X_train, Y_train,
+                batch_size=100,
+                nb_epoch=100,
+                validation_data=(X_test, Y_test),
+                shuffle=True)
+  return model
 
+def save_model(model):
+  model_json = model.to_json()
+
+  model_out = open('model.json', 'w')
+  model_out.write(model_json)
+  model_out.close()
+
+  model.save_weights('weights')
+
+def load_model():
+  model_file = open('model.json', 'r')
+  model_json = model_file.read()
+  loaded_model = model_from_json(model_json)
+
+  loaded_model.load_weights('weights')
+  return loaded_model
+
+model = load_model()
 
 #output predicted classes of test data
 predictions = model.predict_classes(X_test, batch_size=3, verbose=1)
 
-misclassified = np.sum(np.absolute(np.subtract(predictions, y_test)))
+misclassified = np.sum(np.absolute(np.subtract(predictions, y_test.flatten())))
+
 print misclassified
-print misclassified / len(y_test)
+print float(misclassified) / float(num_test_samples) * 100.0
 
-model_json = model.to_json()
 
-model_out = open('model.json', 'w')
-model_out.write(model_json)
-model_out.close()
-
-model.save_weights('weights')
 
