@@ -22,8 +22,6 @@ num_classes = 2
 
 start_image = 3
 
-augment_data = True
-
 data_folders = ['Images', 'redditGood', 'bingBad']
 
 reddit_photos = os.listdir('redditGood')
@@ -33,10 +31,12 @@ random.shuffle(reddit_photos)
 bing_photos = os.listdir('bingBad')
 random.shuffle(bing_photos)
 
-if augment_data:
+mode = 'regression'
+
+if mode=='categorical':
   num_train_samples = 900
   num_test_samples = 300
-else:
+elif mode =='regression':
   num_train_samples = 800
   num_test_samples = 200
 
@@ -113,23 +113,37 @@ def load_images(num_from_each, start_index=0):
 
   return X, Y
 
-
+def load_live_images(num, start_index=0):
+  X = np.zeros((num, 3, img_dim, img_dim), dtype='uint8')
+  Y = np.zeros((num,), dtype='uint8')
+  print "Processing LIVE Photos"
+  for i in range(start_index, num + start_index):  
+      img = load_image('Images/' + image_names[i])
+      X[i-start_index, :, :, :] = img[0:3, :, :]
+      Y[i-start_index] = image_scores[i]
+  return X, Y
 
 #load training images into memory
-X_train, Y_train = load_images(num_train_samples/3)
-X_test, Y_test = load_images(num_test_samples/3, start_index=num_train_samples/3)
+if mode == 'regression':
+  X_train, Y_train = load_live_images(num_train_samples)
+  X_test, Y_test = load_live_images(num_test_samples, start_index=num_train_samples)
+  Y_train = Y_train/50.0 - 1
+  Y_test = Y_test/50.0 - 1
+elif mode == 'categorical':
+  X_train, Y_train = load_images(num_train_samples/3)
+  X_test, Y_test = load_images(num_test_samples/3, start_index=num_train_samples/3)
 
 Y_train = np.reshape(Y_train, (len(Y_train), 1))
 Y_test = np.reshape(Y_test, (len(Y_test), 1))
 
 print Y_test
 
-# Y_train = Y_train/50.0 - 1
-# Y_test = Y_test/50.0 - 1
+
 
 #convert to categorical data type for cross entropy calculations
-Y_train_cat = np_utils.to_categorical(Y_train, num_classes)
-Y_test_cat = np_utils.to_categorical(y_test, num_classes)
+if mode == 'categorical':
+  Y_train_cat = np_utils.to_categorical(Y_train, num_classes)
+  Y_test_cat = np_utils.to_categorical(y_test, num_classes)
 
 #normalize image data to be between 0 and 1
 X_train = X_train.astype('float32')
@@ -307,13 +321,22 @@ def plot_weights(model):
 
 
 model = initialize_lenet()
-model = attach_regression_output(model)
-model = train_model_regression(model)
+if mode == 'categorical':
+  model = attach_class_output(model)
+  model = train_model_categorical(model)
+elif mode ==  'regression':
+  model = attach_regression_output(model)
+  model = train_model_regression(model)
+
 #model = load_model()
 # save_model(model)
 
 #output predicted classes of test data
-predictions = model.predict_classes(X_test, batch_size=3, verbose=1)
+if mode == 'categorical':
+  predictions = model.predict_classes(X_test, batch_size=3, verbose=1)
+elif mode == 'regression':
+  predictions = model.predict(X_test, batch_size=3, verbose=1)
+
 print predictions
 print np.absolute(np.subtract(predictions.flatten(), y_test.flatten()))
 misclassified = np.sum(np.absolute(np.subtract(predictions.flatten(), y_test.flatten())))
@@ -323,6 +346,7 @@ print float(misclassified) / float(num_test_samples)
 
 #plot_weights(model)
 
+#test a specific image against the trained model
 def test_image_score(name):
   tests = np.zeros((1, 3, img_dim, img_dim), dtype='uint8')
 
