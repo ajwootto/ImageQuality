@@ -7,6 +7,7 @@ from keras.optimizers import SGD
 from keras.utils import np_utils
 from scipy import misc
 from keras.regularizers import l2, activity_l2
+from PIL import Image
 
 import scipy.io as sio
 import numpy as np
@@ -15,8 +16,21 @@ import matplotlib.pyplot as plt
 import math
 import random
 import os
+import sys
 
-img_dim = 50
+args = sys.argv
+
+mode = 'categorical'
+action = 'train'
+
+if '--train' in args:
+  action = 'train'
+  mode = args[args.index('--train') + 1]
+elif '--evaluate' in args:
+  action = 'evaluate'
+  filename = args[args.index('--evaluate') + 1]
+
+img_dim = 100
 
 num_classes = 2
 
@@ -31,7 +45,6 @@ random.shuffle(reddit_photos)
 bing_photos = os.listdir('bingBad')
 random.shuffle(bing_photos)
 
-mode = 'categorical'
 choose_one_training_enabled = False
 
 if mode=='categorical':
@@ -75,8 +88,11 @@ def normalize_reddit_score(score):
   return score 
 
 def load_image(name):
-  img = misc.imread(name)
-  img = misc.imresize(img, (img_dim, img_dim))
+  img = Image.open(name)
+  img.thumbnail((img_dim, img_dim), Image.ANTIALIAS)
+  resized = Image.new('RGB', (img_dim, img_dim), (0, 0, 0))  #with alpha
+  resized.paste(img,((img_dim - img.size[0]) / 2, (img_dim - img.size[1]) / 2))
+  img = np.array(resized)
   img = img.transpose((2,0,1))
   return img
 
@@ -116,42 +132,6 @@ def load_live_images(num, start_index=0):
       X[i-start_index, :, :, :] = img[0:3, :, :]
       Y[i-start_index] = image_scores[i]
   return X, Y
-
-#load training images into memory
-if mode == 'regression':
-  if choose_one_training_enabled:
-    #load all the images into the train arrays
-    X_train, Y_train = load_live_images(num_train_samples + num_test_samples)
-    X_test, Y_test = load_live_images(1)
-  else:
-    #load a portion of images from training and a portion for testing
-    X_train, Y_train = load_live_images(num_train_samples)
-    X_test, Y_test = load_live_images(num_test_samples, start_index=num_train_samples)
-  #normalize target scores between -1 and 1
-  Y_train = Y_train/50.0 - 1
-  Y_test = Y_test/50.0 - 1
-elif mode == 'categorical':
-  if choose_one_training_enabled:
-    X_train, Y_train = load_images(num_train_samples/3 + num_test_samples/3)
-    X_test, Y_test = load_images(1)
-  else:
-    X_train, Y_train = load_images(num_train_samples/3)
-    X_test, Y_test = load_images(num_test_samples/3, start_index=num_train_samples/3)
-
-Y_train = np.reshape(Y_train, (len(Y_train), 1))
-Y_test = np.reshape(Y_test, (len(Y_test), 1))
-
-
-#convert to categorical data type for cross entropy calculations
-if mode == 'categorical':
-  Y_train_cat = np_utils.to_categorical(Y_train, num_classes)
-  Y_test_cat = np_utils.to_categorical(Y_test, num_classes)
-
-#normalize image data to be between 0 and 1
-X_train = X_train.astype('float32')
-X_test = X_test.astype('float32')
-X_train /= 255
-X_test /= 255
 
 
 def initialize_model():
@@ -291,33 +271,6 @@ def plot_weights(model):
     plt.show()
 
 
-# model = initialize_lenet()
-# if mode == 'categorical':
-#   model = attach_class_output(model)
-#   model = train_model_categorical(model)
-# elif mode ==  'regression':
-#   model = attach_regression_output(model)
-#   model = train_model_regression(model)
-
-model = load_model('categorical')
-# save_model(model)
-
-#output predicted classes of test data
-if mode == 'categorical':
-  predictions = model.predict_classes(X_test, batch_size=3, verbose=1)
-elif mode == 'regression':
-  predictions = model.predict(X_test, batch_size=3, verbose=1)
-
-print predictions
-print Y_test.flatten()
-misclassified = np.sum(np.absolute(np.subtract(predictions.flatten(), Y_test.flatten())))
-
-print misclassified
-print float(misclassified) / float(num_test_samples) 
-
-#plot_weights(model)
-
-#test a specific image against the trained model
 def test_image_score(name):
   tests = np.zeros((1, 3, img_dim, img_dim), dtype='uint8')
 
@@ -327,6 +280,75 @@ def test_image_score(name):
   tests = tests.astype('float32')
   tests /= 255
   print model.predict(tests)
+
+if action == 'train':
+
+  #load training images into memory
+  if mode == 'regression':
+    if choose_one_training_enabled:
+      #load all the images into the train arrays
+      X_train, Y_train = load_live_images(num_train_samples + num_test_samples)
+      X_test, Y_test = load_live_images(1)
+    else:
+      #load a portion of images from training and a portion for testing
+      X_train, Y_train = load_live_images(num_train_samples)
+      X_test, Y_test = load_live_images(num_test_samples, start_index=num_train_samples)
+    #normalize target scores between -1 and 1
+    Y_train = Y_train/50.0 - 1
+    Y_test = Y_test/50.0 - 1
+  elif mode == 'categorical':
+    if choose_one_training_enabled:
+      X_train, Y_train = load_images(num_train_samples/3 + num_test_samples/3)
+      X_test, Y_test = load_images(1)
+    else:
+      X_train, Y_train = load_images(num_train_samples/3)
+      X_test, Y_test = load_images(num_test_samples/3, start_index=num_train_samples/3)
+
+  Y_train = np.reshape(Y_train, (len(Y_train), 1))
+  Y_test = np.reshape(Y_test, (len(Y_test), 1))
+
+
+  #convert to categorical data type for cross entropy calculations
+  if mode == 'categorical':
+    Y_train_cat = np_utils.to_categorical(Y_train, num_classes)
+    Y_test_cat = np_utils.to_categorical(Y_test, num_classes)
+
+  #normalize image data to be between 0 and 1
+  X_train = X_train.astype('float32')
+  X_test = X_test.astype('float32')
+  X_train /= 255
+  X_test /= 255
+
+  model = initialize_lenet()
+
+  if mode == 'categorical':
+    model = attach_class_output(model)
+    model = train_model_categorical(model)
+  elif mode ==  'regression':
+    model = attach_regression_output(model)
+    model = train_model_regression(model)
+    #output predicted classes of test data
+    if mode == 'categorical':
+      predictions = model.predict_classes(X_test, batch_size=3, verbose=1)
+    elif mode == 'regression':
+      predictions = model.predict(X_test, batch_size=3, verbose=1)
+
+    print predictions
+    print Y_test.flatten()
+    misclassified = np.sum(np.absolute(np.subtract(predictions.flatten(), Y_test.flatten())))
+
+    print misclassified
+    print float(misclassified) / float(num_test_samples) 
+
+elif action == 'evaluate':
+  model = load_model('categorical')
+  test_image_score(filename)
+
+
+#plot_weights(model)
+
+#test a specific image against the trained model
+
 
 
 
