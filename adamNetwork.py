@@ -345,7 +345,7 @@ if action == 'train':
   elif mode ==  'regression':
     model = attach_regression_output(model)
     model = train_model_regression(model)
-    predictions = model.predict(X_test, batch_size=3, verbose=1)
+    predictions = (model.predict(X_test, batch_size=3, verbose=1) + 1) * 50
     #output predicted classes of test data
 
   print predictions
