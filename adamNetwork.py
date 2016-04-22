@@ -30,6 +30,9 @@ if '--train' in args:
 elif '--evaluate' in args:
   action = 'evaluate'
   filename = args[args.index('--evaluate') + 1]
+elif '--sort' in args:
+  action = 'sort'
+  mode = 'regression'
 if '--mode' in args:
   mode = args[args.index('--mode') + 1]
 if '--choose_one' in args:
@@ -356,6 +359,14 @@ elif action == 'evaluate':
   model = load_model(mode)
   test_image_score(filename)
 
+elif action == 'sort':
+  model = load_model('regression')
+  images, _ = load_live_images(num_train_samples + num_test_samples)
+  predictions = model.predict(images, batch_size=3, verbose=1).flatten()
+  sort_indices = np.argsort(predictions)
+  sorted_images = images[sort_indices]
+  for i, image in enumerate(sorted_images):
+    misc.imsave('Sorted/' + str(i) + '.jpg', image)
 
 #plot_weights(model)
 
