@@ -23,6 +23,7 @@ args = sys.argv
 
 mode = 'categorical'
 action = 'train'
+choose_one_training_enabled = False
 
 if '--train' in args:
   action = 'train'
@@ -31,13 +32,11 @@ elif '--evaluate' in args:
   action = 'evaluate'
   filename = args[args.index('--evaluate') + 1]
 
+if '--choose_one' in args:
+  choose_one_training_enabled=True
+
 img_dim = 100
-
 num_classes = 2
-
-start_image = 3
-
-data_folders = ['Images', 'redditGood', 'bingBad']
 
 reddit_photos = os.listdir('redditGood')
 reddit_photos = [x for x in reddit_photos if '.jpg' in x]
@@ -45,8 +44,6 @@ random.shuffle(reddit_photos)
 
 bing_photos = os.listdir('bingBad')
 random.shuffle(bing_photos)
-
-choose_one_training_enabled = False
 
 if mode=='categorical':
   num_train_samples = 900
