@@ -33,6 +33,8 @@ random.shuffle(bing_photos)
 
 mode = 'regression'
 
+choose_one_training_enabled = True
+
 if mode=='categorical':
   num_train_samples = 900
   num_test_samples = 300
@@ -125,8 +127,12 @@ def load_live_images(num, start_index=0):
 
 #load training images into memory
 if mode == 'regression':
-  X_train, Y_train = load_live_images(num_train_samples)
-  X_test, Y_test = load_live_images(num_test_samples, start_index=num_train_samples)
+  if choose_one_training_enabled:
+    X_train, Y_train = load_live_images(num_train_samples + num_test_samples)
+    X_test, Y_test = load_live_images(1)
+  else:
+    X_train, Y_train = load_live_images(num_train_samples)
+    X_test, Y_test = load_live_images(num_test_samples, start_index=num_train_samples)
   Y_train = Y_train/50.0 - 1
   Y_test = Y_test/50.0 - 1
 elif mode == 'categorical':
