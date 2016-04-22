@@ -1,6 +1,6 @@
 from keras.models import Sequential
 from keras.models import model_from_json
-from keras.utils.visualize_util import plot
+#from keras.utils.visualize_util import plot
 
 from keras.layers.core import Dense, Activation, Flatten, Dropout
 from keras.layers.convolutional import Convolution2D, MaxPooling2D, ZeroPadding2D
@@ -93,7 +93,6 @@ def load_image(name):
   img = np.array(resized)
   img = img.transpose((2,0,1))
   return img
-
 
 def load_images(num_from_each, start_index=0):
   num = num_from_each * 3
@@ -201,7 +200,7 @@ def save_model(model, name="model"):
   model_out = open(name + '.json', 'w')
   model_out.write(model_json)
   model_out.close()
-  plot(model, to_file='model_' + name + '.png')
+  #plot(model, to_file='model_' + name + '.png')
   model.save_weights('weights_' + name, overwrite=True)
 
 def load_model(name):
