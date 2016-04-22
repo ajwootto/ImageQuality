@@ -35,6 +35,8 @@ if '--mode' in args:
 if '--choose_one' in args:
   choose_one_training_enabled=True
 
+print "Performing " + action + " with " + mode + " and choose one training " + ('enabled' if choose_one_training_enabled else 'disabled')
+
 img_dim = 100
 num_classes = 2
 
@@ -146,10 +148,17 @@ def initialize_model():
 
   return model
 
+def compile_model(model):
+  if mode=='categorical':
+    sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+    model.compile(loss='categorical_crossentropy', optimizer=sgd)
+  elif mode=='regression':
+    model.compile(loss='mean_squared_error', optimizer='rmsprop')
+  return model 
+
 def train_model_categorical(model):
   #define optimizer with learning rate, momentum etc.
-  sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-  model.compile(loss='categorical_crossentropy', optimizer=sgd)
+  model=compile_model(model)
 
   #train model
   def train(xtrain, ytrain, xtest, ytest):
@@ -171,8 +180,7 @@ def train_model_categorical(model):
   return model
 
 def train_model_regression(model):
-  model.compile(loss='mean_squared_error', optimizer='rmsprop')
-
+  model = compile_model(model)
   #train model
   def train(xtrain, ytrain, xtest, ytest):
     for i in range(0, 1 if choose_one_training_enabled else 10):
@@ -209,6 +217,7 @@ def load_model(name):
   loaded_model = model_from_json(model_json)
 
   loaded_model.load_weights('weights_' + name)
+  loaded_model=compile_model(loaded_model)
   return loaded_model
 
 #initialize a model based on the LeNet-5 architecture (1995)
