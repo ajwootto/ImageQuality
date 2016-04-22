@@ -330,12 +330,12 @@ if action == 'train':
     elif mode == 'regression':
       predictions = model.predict(X_test, batch_size=3, verbose=1)
 
-    print predictions
-    print Y_test.flatten()
-    misclassified = np.sum(np.absolute(np.subtract(predictions.flatten(), Y_test.flatten())))
+  print predictions
+  print Y_test.flatten()
+  misclassified = np.sum(np.absolute(np.subtract(predictions.flatten(), Y_test.flatten())))
 
-    print misclassified
-    print float(misclassified) / float(num_test_samples) 
+  print misclassified
+  print float(misclassified) / float(num_test_samples) 
 
 elif action == 'evaluate':
   model = load_model('categorical')
