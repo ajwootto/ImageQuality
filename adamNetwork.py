@@ -163,10 +163,10 @@ def train_model_categorical(model):
   #train model
   def train(xtrain, ytrain, xtest, ytest):
 
-    for i in range(0, 1 if choose_one_training_enabled else 10):
+    for i in range(0, 1 if choose_one_training_enabled else 20):
       model.fit(X_train, Y_train_cat,
                     batch_size=32,
-                    nb_epoch=100,
+                    nb_epoch=50,
                     validation_data=(X_test, Y_test_cat),
                     shuffle=True)
       print "Saving"
@@ -183,10 +183,10 @@ def train_model_regression(model):
   model = compile_model(model)
   #train model
   def train(xtrain, ytrain, xtest, ytest):
-    for i in range(0, 1 if choose_one_training_enabled else 10):
+    for i in range(0, 1 if choose_one_training_enabled else 20):
       model.fit(xtrain, ytrain,
                     batch_size=32,
-                    nb_epoch=100,
+                    nb_epoch=50,
                     validation_data=(xtest, ytest),
                     shuffle=True)
       print "Saving"
@@ -302,7 +302,7 @@ if action == 'train':
     if choose_one_training_enabled:
       #load all the images into the train arrays
       X_train, Y_train = load_live_images(num_train_samples + num_test_samples)
-      X_test, Y_test = load_live_images(1)
+      X_test, Y_test = X_train, Y_train
     else:
       #load a portion of images from training and a portion for testing
       X_train, Y_train = load_live_images(num_train_samples)
@@ -313,7 +313,7 @@ if action == 'train':
   elif mode == 'categorical':
     if choose_one_training_enabled:
       X_train, Y_train = load_images(num_train_samples/3 + num_test_samples/3)
-      X_test, Y_test = load_images(1)
+      X_test, Y_test = X_train, Y_train
     else:
       X_train, Y_train = load_images(num_train_samples/3)
       X_test, Y_test = load_images(num_test_samples/3, start_index=num_train_samples/3)
