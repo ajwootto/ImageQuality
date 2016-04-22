@@ -33,7 +33,7 @@ random.shuffle(bing_photos)
 
 mode = 'regression'
 
-choose_one_training_enabled = True
+choose_one_training_enabled = False
 
 if mode=='categorical':
   num_train_samples = 900
@@ -128,16 +128,23 @@ def load_live_images(num, start_index=0):
 #load training images into memory
 if mode == 'regression':
   if choose_one_training_enabled:
+    #load all the images into the train arrays
     X_train, Y_train = load_live_images(num_train_samples + num_test_samples)
     X_test, Y_test = load_live_images(1)
   else:
+    #load a portion of images from training and a portion for testing
     X_train, Y_train = load_live_images(num_train_samples)
     X_test, Y_test = load_live_images(num_test_samples, start_index=num_train_samples)
+  #normalize target scores between -1 and 1
   Y_train = Y_train/50.0 - 1
   Y_test = Y_test/50.0 - 1
 elif mode == 'categorical':
-  X_train, Y_train = load_images(num_train_samples/3)
-  X_test, Y_test = load_images(num_test_samples/3, start_index=num_train_samples/3)
+  if choose_one_training_enabled:
+    X_train, Y_train = load_images(num_train_samples/3 + num_test_samples/3)
+    X_test, Y_test = load_images(1)
+  else:
+    X_train, Y_train = load_images(num_train_samples/3)
+    X_test, Y_test = load_images(num_test_samples/3, start_index=num_train_samples/3)
 
 Y_train = np.reshape(Y_train, (len(Y_train), 1))
 Y_test = np.reshape(Y_test, (len(Y_test), 1))
@@ -177,30 +184,47 @@ def train_model_categorical(model):
   #define optimizer with learning rate, momentum etc.
   sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
   model.compile(loss='categorical_crossentropy', optimizer=sgd)
-  #model.compile(loss='mean_squared_error', optimizer='rmsprop')
+
   #train model
-  for i in range(0, 10):
-    model.fit(X_train, Y_train_cat,
-                  batch_size=32,
-                  nb_epoch=100,
-                  validation_data=(X_test, Y_test_cat),
-                  shuffle=True)
-    print "Saving"
-    save_model(model, "categorical")
+  def train(xtrain, ytrain, xtest, ytest):
+    for i in range(0, 10):
+      model.fit(X_train, Y_train_cat,
+                    batch_size=32,
+                    nb_epoch=100,
+                    validation_data=(X_test, Y_test_cat),
+                    shuffle=True)
+      print "Saving"
+      save_model(model, "categorical")
+
+  if choose_one_training_enabled:
+    for a in range(0, num_train_samples+num_test_samples):
+      train(np.delete(X_train, a, 0), np.delete(Y_train_cat, a, 0), np.array([X_train[a]]), np.array([Y_train_cat[a]]))
+  else:
+    train(X_train, Y_train_cat, X_test, Y_test_cat)
   return model
 
 def train_model_regression(model):
-  #define optimizer with learning rate, momentum etc.
   model.compile(loss='mean_squared_error', optimizer='rmsprop')
+
   #train model
-  for i in range(0, 10):
-    model.fit(X_train, Y_train,
-                  batch_size=32,
-                  nb_epoch=100,
-                  validation_data=(X_test, Y_test),
-                  shuffle=True)
-    print "Saving"
-    save_model(model, "regression")
+  def train(xtrain, ytrain, xtest, ytest):
+    for i in range(0, 10):
+      model.fit(xtrain, ytrain,
+                    batch_size=32,
+                    nb_epoch=2,
+                    validation_data=(xtest, ytest),
+                    shuffle=True)
+      print "Saving"
+      save_model(model, "regression")
+
+  #if choose one training, repeat training for each sample, removing given index from train data and making it test data
+  if choose_one_training_enabled:
+    for a in range(0, num_train_samples+num_test_samples):
+      print "Choosing " + str(a)
+      train(np.delete(X_train, a, 0), np.delete(Y_train, a, 0), np.array([X_train[a]]), np.array([Y_train[a]]))
+  else:
+    train(X_train, Y_train, X_test, Y_test)
+
   return model
 
 def save_model(model, name="model"):
