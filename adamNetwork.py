@@ -311,8 +311,8 @@ if action == 'train':
       X_train, Y_train = load_live_images(num_train_samples)
       X_test, Y_test = load_live_images(num_test_samples, start_index=num_train_samples)
     #normalize target scores between -1 and 1
-    Y_train = Y_train/50.0 - 1
-    Y_test = Y_test/50.0 - 1
+    # Y_train = Y_train/50.0 - 1
+    # Y_test = Y_test/50.0 - 1
   elif mode == 'categorical':
     if choose_one_training_enabled:
       X_train, Y_train = load_images(num_train_samples/3 + num_test_samples/3)
@@ -350,10 +350,14 @@ if action == 'train':
 
   print predictions
   print Y_test.flatten()
-  misclassified = np.sum(np.absolute(np.subtract(predictions.flatten(), Y_test.flatten())))
+  errors = np.absolute(np.subtract(predictions.flatten(), Y_test.flatten()))
+  misclassified = np.sum(errors)
 
   print misclassified
-  print float(misclassified) / float(num_test_samples) /2 * 100
+  print "Average Error:"
+  print float(misclassified) / float(num_test_samples)
+  print "Max Error"
+  print np.max(errors)
 
 elif action == 'evaluate':
   model = load_model(mode)
@@ -363,9 +367,9 @@ elif action == 'sort':
   model = load_model('regression')
   images, actual = load_live_images(num_train_samples + num_test_samples)
   actual = actual.flatten()
-  predictions = (model.predict(images, batch_size=3, verbose=1).flatten() + 1) * 50
+  predictions = model.predict(images, batch_size=3, verbose=1).flatten()
   sort_indices = np.argsort(predictions)
-  sorted_images = np.fliplr(images[sort_indices])
+  sorted_images = images[sort_indices]
   sorted_predictions = predictions[sort_indices]
   sorted_actual = actual[sort_indices]
 
