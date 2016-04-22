@@ -10,7 +10,7 @@ photo_directory = 'redditGood'
 if not os.path.exists(photo_directory):
     os.makedirs(photo_directory)
 
-index = 404
+index = 0
 for x in submissions:
     if 'imgur.com' in x.url:
       if '.jpg' not in x.url:

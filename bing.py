@@ -16,7 +16,7 @@ photo_directory = 'bingBad'
 if not os.path.exists(photo_directory):
     os.makedirs(photo_directory)
 
-for offset in range(1050, 50000, 50):
+for offset in range(0, 50000, 50):
   bing_search_url = "https://api.datamarket.azure.com/Bing/Search/v1/Image?Query=%27bad%20photography%27&$format=json&$top=200&$skip=" + str(offset)
 
   request = urllib2.Request(bing_search_url)

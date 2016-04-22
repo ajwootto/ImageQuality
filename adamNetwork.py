@@ -31,8 +31,7 @@ random.shuffle(reddit_photos)
 bing_photos = os.listdir('bingBad')
 random.shuffle(bing_photos)
 
-mode = 'regression'
-
+mode = 'categorical'
 choose_one_training_enabled = False
 
 if mode=='categorical':
@@ -68,13 +67,6 @@ image_scores = sio.loadmat('Data/AllMOS_release.mat')['AllMOS_release'][0]
 image_names = massage_mat_array(image_names)
 
 image_names, image_scores = shuffle_in_unison(image_names, image_scores)
-
-#define zero arrays for training and testing data
-X_train = np.zeros((num_train_samples, 3, img_dim, img_dim), dtype='uint8')
-Y_train = np.zeros((num_train_samples,), dtype='uint8')
-
-X_test = np.zeros((num_test_samples, 3, img_dim, img_dim), dtype='uint8')
-y_test = np.zeros((num_test_samples,), dtype='uint8')
 
 def normalize_reddit_score(score):
   score = score + 70
@@ -149,14 +141,10 @@ elif mode == 'categorical':
 Y_train = np.reshape(Y_train, (len(Y_train), 1))
 Y_test = np.reshape(Y_test, (len(Y_test), 1))
 
-print Y_test
-
-
-
 #convert to categorical data type for cross entropy calculations
 if mode == 'categorical':
   Y_train_cat = np_utils.to_categorical(Y_train, num_classes)
-  Y_test_cat = np_utils.to_categorical(y_test, num_classes)
+  Y_test_cat = np_utils.to_categorical(Y_test, num_classes)
 
 #normalize image data to be between 0 and 1
 X_train = X_train.astype('float32')
@@ -244,55 +232,6 @@ def load_model(name):
   loaded_model.load_weights('weights_' + name)
   return loaded_model
 
-#initializes a model based on the VGG architecture which placed second in 2014 imagenet competition
-def initialize_vgg():
-  model = Sequential()
-  model.add(ZeroPadding2D((1,1), input_shape=(3,224,224)))
-  model.add(Convolution2D(64, 3, 3, activation='relu'))
-  model.add(ZeroPadding2D((1,1)))
-  model.add(Convolution2D(64, 3, 3, activation='relu'))
-  model.add(MaxPooling2D((2,2), strides=(2,2)))
-
-  model.add(ZeroPadding2D((1,1)))
-  model.add(Convolution2D(128, 3, 3, activation='relu'))
-  model.add(ZeroPadding2D((1,1)))
-  model.add(Convolution2D(128, 3, 3, activation='relu'))
-  model.add(MaxPooling2D((2,2), strides=(2,2)))
-
-  model.add(ZeroPadding2D((1,1)))
-  model.add(Convolution2D(256, 3, 3, activation='relu'))
-  model.add(ZeroPadding2D((1,1)))
-  model.add(Convolution2D(256, 3, 3, activation='relu'))
-  model.add(ZeroPadding2D((1,1)))
-  model.add(Convolution2D(256, 3, 3, activation='relu'))
-  model.add(MaxPooling2D((2,2), strides=(2,2)))
-
-  model.add(ZeroPadding2D((1,1)))
-  model.add(Convolution2D(512, 3, 3, activation='relu'))
-  model.add(ZeroPadding2D((1,1)))
-  model.add(Convolution2D(512, 3, 3, activation='relu'))
-  model.add(ZeroPadding2D((1,1)))
-  model.add(Convolution2D(512, 3, 3, activation='relu'))
-  model.add(MaxPooling2D((2,2), strides=(2,2)))
-
-  model.add(ZeroPadding2D((1,1)))
-  model.add(Convolution2D(512, 3, 3, activation='relu'))
-  model.add(ZeroPadding2D((1,1)))
-  model.add(Convolution2D(512, 3, 3, activation='relu'))
-  model.add(ZeroPadding2D((1,1)))
-  model.add(Convolution2D(512, 3, 3, activation='relu'))
-  model.add(MaxPooling2D((2,2), strides=(2,2)))
-
-  model.add(Flatten())
-  model.add(Dense(4096, activation='relu'))
-  model.add(Dropout(0.5))
-  model.add(Dense(4096, activation='relu'))
-  model.add(Dropout(0.5))
-  model.add(Dense(1, activation='linear'))
-
-  return model
-
-
 #initialize a model based on the LeNet-5 architecture (1995)
 def initialize_lenet():
   model = Sequential()
@@ -350,15 +289,15 @@ def plot_weights(model):
     plt.show()
 
 
-model = initialize_lenet()
-if mode == 'categorical':
-  model = attach_class_output(model)
-  model = train_model_categorical(model)
-elif mode ==  'regression':
-  model = attach_regression_output(model)
-  model = train_model_regression(model)
+# model = initialize_lenet()
+# if mode == 'categorical':
+#   model = attach_class_output(model)
+#   model = train_model_categorical(model)
+# elif mode ==  'regression':
+#   model = attach_regression_output(model)
+#   model = train_model_regression(model)
 
-#model = load_model()
+model = load_model('categorical')
 # save_model(model)
 
 #output predicted classes of test data
@@ -368,8 +307,8 @@ elif mode == 'regression':
   predictions = model.predict(X_test, batch_size=3, verbose=1)
 
 print predictions
-print np.absolute(np.subtract(predictions.flatten(), y_test.flatten()))
-misclassified = np.sum(np.absolute(np.subtract(predictions.flatten(), y_test.flatten())))
+print np.absolute(np.subtract(predictions.flatten(), Y_test.flatten()))
+misclassified = np.sum(np.absolute(np.subtract(predictions.flatten(), Y_test.flatten())))
 
 print misclassified
 print float(misclassified) / float(num_test_samples) 
