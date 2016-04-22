@@ -285,7 +285,15 @@ def test_image_score(name):
 
   tests = tests.astype('float32')
   tests /= 255
-  print model.predict(tests)
+
+  if mode=='categorical':
+    print "Class Prediction:"
+    print model.predict_classes(tests)
+    print "Confidence:"
+    print model.predict_proba(tests)
+  elif mode=='regression':
+    print "Score Prediction:"
+    print model.predict(tests)
 
 if action == 'train':
 
