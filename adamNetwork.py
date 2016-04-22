@@ -27,11 +27,11 @@ choose_one_training_enabled = False
 
 if '--train' in args:
   action = 'train'
-  mode = args[args.index('--train') + 1]
 elif '--evaluate' in args:
   action = 'evaluate'
   filename = args[args.index('--evaluate') + 1]
-
+if '--mode' in args:
+  mode = args[args.index('--mode') + 1]
 if '--choose_one' in args:
   choose_one_training_enabled=True
 
@@ -338,7 +338,7 @@ if action == 'train':
   print float(misclassified) / float(num_test_samples) 
 
 elif action == 'evaluate':
-  model = load_model('categorical')
+  model = load_model(mode)
   test_image_score(filename)
 
 
