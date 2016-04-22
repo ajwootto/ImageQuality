@@ -365,6 +365,10 @@ elif action == 'sort':
   predictions = model.predict(images, batch_size=3, verbose=1).flatten()
   sort_indices = np.argsort(predictions)
   sorted_images = images[sort_indices]
+
+  if not os.path.exists('Sorted'):
+    os.makedirs('Sorted')
+    
   for i, image in enumerate(sorted_images):
     misc.imsave('Sorted/' + str(i) + '.jpg', image.transpose([1,2,0]))
 
