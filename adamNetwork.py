@@ -366,7 +366,7 @@ elif action == 'sort':
   sort_indices = np.argsort(predictions)
   sorted_images = images[sort_indices]
   for i, image in enumerate(sorted_images):
-    misc.imsave('Sorted/' + str(i) + '.jpg', image)
+    misc.imsave('Sorted/' + str(i) + '.jpg', image.transpose([1,2,0]))
 
 #plot_weights(model)
 
