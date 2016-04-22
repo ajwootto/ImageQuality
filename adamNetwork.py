@@ -363,7 +363,7 @@ elif action == 'sort':
   model = load_model('regression')
   images, actual = load_live_images(num_train_samples + num_test_samples)
   actual = actual.flatten()
-  predictions = model.predict(images, batch_size=3, verbose=1).flatten()
+  predictions = (model.predict(images, batch_size=3, verbose=1).flatten() + 1) * 50
   sort_indices = np.argsort(predictions)
   sorted_images = np.fliplr(images[sort_indices])
   sorted_predictions = predictions[sort_indices]
