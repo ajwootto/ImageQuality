@@ -361,16 +361,19 @@ elif action == 'evaluate':
 
 elif action == 'sort':
   model = load_model('regression')
-  images, _ = load_live_images(num_train_samples + num_test_samples)
+  images, actual = load_live_images(num_train_samples + num_test_samples)
+  actual = actual.flatten()
   predictions = model.predict(images, batch_size=3, verbose=1).flatten()
   sort_indices = np.argsort(predictions)
-  sorted_images = images[sort_indices]
+  sorted_images = np.fliplr(images[sort_indices])
+  sorted_predictions = predictions[sort_indices]
+  sorted_actual = actual[sort_indices]
 
   if not os.path.exists('Sorted'):
     os.makedirs('Sorted')
-    
+
   for i, image in enumerate(sorted_images):
-    misc.imsave('Sorted/' + str(i) + '.jpg', image.transpose([1,2,0]))
+    misc.imsave('Sorted/' + '_'.join([str(i), str(sorted_predictions[i]), str(sorted_actual[i])]) + '.jpg', image.transpose([1,2,0]))
 
 #plot_weights(model)
 
