@@ -298,6 +298,24 @@ def test_image_score(name):
     print "Score Prediction:"
     print model.predict(tests)
 
+
+def sort():
+  model = load_model('regression')
+  images, actual = load_live_images(num_train_samples + num_test_samples)
+  actual = actual.flatten()
+  predictions = model.predict(images, batch_size=3, verbose=1).flatten()
+  sort_indices = np.argsort(predictions)
+  sorted_images = images[sort_indices]
+  sorted_predictions = predictions[sort_indices]
+  sorted_actual = actual[sort_indices]
+
+  if not os.path.exists('Sorted'):
+    os.makedirs('Sorted')
+
+  for i, image in enumerate(sorted_images):
+    misc.imsave('Sorted/' + '_'.join([str(i), str(round(sorted_predictions[i])), str(sorted_actual[i])]) + '.jpg', image.transpose([1,2,0]))
+
+
 if action == 'train':
 
   #load training images into memory
@@ -359,25 +377,14 @@ if action == 'train':
   print "Max Error"
   print np.max(errors)
 
+  sort()
+
 elif action == 'evaluate':
   model = load_model(mode)
   test_image_score(filename)
 
 elif action == 'sort':
-  model = load_model('regression')
-  images, actual = load_live_images(num_train_samples + num_test_samples)
-  actual = actual.flatten()
-  predictions = model.predict(images, batch_size=3, verbose=1).flatten()
-  sort_indices = np.argsort(predictions)
-  sorted_images = images[sort_indices]
-  sorted_predictions = predictions[sort_indices]
-  sorted_actual = actual[sort_indices]
-
-  if not os.path.exists('Sorted'):
-    os.makedirs('Sorted')
-
-  for i, image in enumerate(sorted_images):
-    misc.imsave('Sorted/' + '_'.join([str(i), str(round(sorted_predictions[i])), str(sorted_actual[i])]) + '.jpg', image.transpose([1,2,0]))
+  sort()
 
 #plot_weights(model)
 
