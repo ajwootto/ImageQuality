@@ -38,8 +38,8 @@ if mode=='categorical':
   num_train_samples = 900
   num_test_samples = 300
 elif mode =='regression':
-  num_train_samples = 800
-  num_test_samples = 200
+  num_train_samples = 812
+  num_test_samples = 348
 
 #Mat array format is weird, and flatten doesn't seem to do anything. Massage it into a 1D array
 def massage_mat_array(array):
@@ -141,6 +141,7 @@ elif mode == 'categorical':
 Y_train = np.reshape(Y_train, (len(Y_train), 1))
 Y_test = np.reshape(Y_test, (len(Y_test), 1))
 
+
 #convert to categorical data type for cross entropy calculations
 if mode == 'categorical':
   Y_train_cat = np_utils.to_categorical(Y_train, num_classes)
@@ -175,7 +176,8 @@ def train_model_categorical(model):
 
   #train model
   def train(xtrain, ytrain, xtest, ytest):
-    for i in range(0, 10):
+
+    for i in range(0, 1 if choose_one_training_enabled else 10):
       model.fit(X_train, Y_train_cat,
                     batch_size=32,
                     nb_epoch=100,
@@ -196,10 +198,10 @@ def train_model_regression(model):
 
   #train model
   def train(xtrain, ytrain, xtest, ytest):
-    for i in range(0, 10):
+    for i in range(0, 1 if choose_one_training_enabled else 10):
       model.fit(xtrain, ytrain,
                     batch_size=32,
-                    nb_epoch=2,
+                    nb_epoch=100,
                     validation_data=(xtest, ytest),
                     shuffle=True)
       print "Saving"
@@ -307,7 +309,7 @@ elif mode == 'regression':
   predictions = model.predict(X_test, batch_size=3, verbose=1)
 
 print predictions
-print np.absolute(np.subtract(predictions.flatten(), Y_test.flatten()))
+print Y_test.flatten()
 misclassified = np.sum(np.absolute(np.subtract(predictions.flatten(), Y_test.flatten())))
 
 print misclassified
