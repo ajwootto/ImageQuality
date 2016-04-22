@@ -345,7 +345,7 @@ if action == 'train':
   elif mode ==  'regression':
     model = attach_regression_output(model)
     model = train_model_regression(model)
-    predictions = (model.predict(X_test, batch_size=3, verbose=1) + 1) * 50
+    predictions = model.predict(X_test, batch_size=3, verbose=1)
     #output predicted classes of test data
 
   print predictions
@@ -353,7 +353,7 @@ if action == 'train':
   misclassified = np.sum(np.absolute(np.subtract(predictions.flatten(), Y_test.flatten())))
 
   print misclassified
-  print float(misclassified) / float(num_test_samples) 
+  print float(misclassified) / float(num_test_samples) /2 * 100
 
 elif action == 'evaluate':
   model = load_model(mode)
