@@ -373,7 +373,7 @@ elif action == 'sort':
     os.makedirs('Sorted')
 
   for i, image in enumerate(sorted_images):
-    misc.imsave('Sorted/' + '_'.join([str(i), str(sorted_predictions[i]), str(sorted_actual[i])]) + '.jpg', image.transpose([1,2,0]))
+    misc.imsave('Sorted/' + '_'.join([str(i), str(round(sorted_predictions[i])), str(sorted_actual[i])]) + '.jpg', image.transpose([1,2,0]))
 
 #plot_weights(model)
 
