@@ -163,10 +163,10 @@ def train_model_categorical(model):
   #train model
   def train(xtrain, ytrain, xtest, ytest):
 
-    for i in range(0, 1 if choose_one_training_enabled else 20):
+    for i in range(0, 1 if choose_one_training_enabled else 100):
       model.fit(X_train, Y_train_cat,
                     batch_size=32,
-                    nb_epoch=50,
+                    nb_epoch=10,
                     validation_data=(X_test, Y_test_cat),
                     shuffle=True)
       print "Saving"
@@ -183,10 +183,10 @@ def train_model_regression(model):
   model = compile_model(model)
   #train model
   def train(xtrain, ytrain, xtest, ytest):
-    for i in range(0, 1 if choose_one_training_enabled else 20):
+    for i in range(0, 1 if choose_one_training_enabled else 100):
       model.fit(xtrain, ytrain,
                     batch_size=32,
-                    nb_epoch=50,
+                    nb_epoch=10,
                     validation_data=(xtest, ytest),
                     shuffle=True)
       print "Saving"
