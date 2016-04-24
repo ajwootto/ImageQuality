@@ -54,7 +54,7 @@ if mode=='categorical':
   num_train_samples = 900
   num_test_samples = 300
 elif mode =='regression':
-  num_train_samples = 812
+  num_train_samples = 813
   num_test_samples = 348
 
 #Mat array format is weird, and flatten doesn't seem to do anything. Massage it into a 1D array
@@ -170,13 +170,13 @@ def train_model_categorical(model):
       model.fit(X_train, Y_train_cat,
                     batch_size=32,
                     nb_epoch=10,
-                    validation_data=(X_test, Y_test_cat),
+                    validation_split=0.3,
                     shuffle=True)
       print "Saving"
       save_model(model, "categorical")
 
   if choose_one_training_enabled:
-    for a in range(0, num_train_samples+num_test_samples):
+    for a in range(0, num_train_samples):
       train(np.delete(X_train, a, 0), np.delete(Y_train_cat, a, 0), np.array([X_train[a]]), np.array([Y_train_cat[a]]))
   else:
     train(X_train, Y_train_cat, X_test, Y_test_cat)
@@ -189,17 +189,24 @@ def train_model_regression(model):
     for i in range(0, 1 if choose_one_training_enabled else 100):
       model.fit(xtrain, ytrain,
                     batch_size=32,
-                    nb_epoch=10,
-                    validation_data=(xtest, ytest),
+                    nb_epoch=150,
+                    validation_split=(xtest, ytest),
                     shuffle=True)
       print "Saving"
       save_model(model, "regression")
 
   #if choose one training, repeat training for each sample, removing given index from train data and making it test data
   if choose_one_training_enabled:
-    for a in range(0, num_train_samples+num_test_samples):
+    test_scores = []
+    for a in range(0, 6):
       print "Choosing " + str(a)
+      model = initialize_lenet()
+      model = attach_regression_output(model)
+      model = compile_model(model)
       train(np.delete(X_train, a, 0), np.delete(Y_train, a, 0), np.array([X_train[a]]), np.array([Y_train[a]]))
+      test_scores.append(model.predict(np.array([X_train[a]]))[0] - np.array([Y_train[a]]))
+    print "Test Scores"
+    print test_scores
   else:
     train(X_train, Y_train, X_test, Y_test)
 
